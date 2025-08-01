@@ -17,16 +17,17 @@ RUN mkdir -p /usr/local/tomcat/webapps/pjecalc
 RUN echo '<!DOCTYPE html>\
 <html>\
 <head>\
-    <title>PJE-Calc Test</title>\
+    <title>PJE-Calc</title>\
     <meta charset="UTF-8">\
 </head>\
 <body>\
-    <h1>PJE-Calc Test Page</h1>\
-    <p>Esta é uma página de teste para verificar se o contexto /pjecalc está funcionando.</p>\
+    <h1>PJE-Calc</h1>\
+    <p>Aplicação PJE-Calc instalada com sucesso!</p>\
+    <p>Por favor, acesse <a href="logon.jsf">logon.jsf</a> para entrar no sistema.</p>\
 </body>\
 </html>' > /usr/local/tomcat/webapps/pjecalc/index.html
 
-# Criar um arquivo web.xml básico para teste
+# Criar um arquivo web.xml básico
 RUN mkdir -p /usr/local/tomcat/webapps/pjecalc/WEB-INF
 RUN echo '<?xml version="1.0" encoding="UTF-8"?>\
 <web-app xmlns="http://java.sun.com/xml/ns/javaee"\
@@ -34,7 +35,7 @@ RUN echo '<?xml version="1.0" encoding="UTF-8"?>\
          xsi:schemaLocation="http://java.sun.com/xml/ns/javaee\
          http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"\
          version="2.5">\
-    <display-name>PJE-Calc Test</display-name>\
+    <display-name>PJE-Calc</display-name>\
     <servlet>\
         <servlet-name>Faces Servlet</servlet-name>\
         <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>\
