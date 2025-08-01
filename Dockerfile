@@ -18,6 +18,22 @@ COPY ./transfer/tomcat/webapps/pjecalc /usr/local/tomcat/webapps/pjecalc/
 # Verificar se o diretório conf existe antes de copiar
 RUN mkdir -p /usr/local/tomcat/conf
 
+# Corrigir configurações de datasource no context.xml e outros arquivos XML
+RUN find /usr/local/tomcat -name "*.xml" -type f -exec sed -i 's/maxActive=/maxTotal=/g' {} \; && \
+    find /usr/local/tomcat -name "*.xml" -type f -exec sed -i 's/maxWait=/maxWaitMillis=/g' {} \; && \
+    find /usr/local/tomcat -name "*.xml" -type f -exec sed -i 's/removeAbandoned=/removeAbandonedOnBorrow=/g' {} \; && \
+    find /usr/local/tomcat -name "*.xml" -type f -exec sed -i 's/removeAbandonedTimeout=/removeAbandonedTimeout=/g' {} \;
+
+# Verificar arquivos específicos de configuração do datasource
+RUN if [ -f /usr/local/tomcat/conf/context.xml ]; then \
+        sed -i 's/maxActive=/maxTotal=/g' /usr/local/tomcat/conf/context.xml && \
+        sed -i 's/maxWait=/maxWaitMillis=/g' /usr/local/tomcat/conf/context.xml; \
+    fi && \
+    if [ -f /usr/local/tomcat/webapps/pjecalc/META-INF/context.xml ]; then \
+        sed -i 's/maxActive=/maxTotal=/g' /usr/local/tomcat/webapps/pjecalc/META-INF/context.xml && \
+        sed -i 's/maxWait=/maxWaitMillis=/g' /usr/local/tomcat/webapps/pjecalc/META-INF/context.xml; \
+    fi
+
 # Ajustar permissões
 RUN chmod -R 755 /usr/local/tomcat/webapps/pjecalc
 
