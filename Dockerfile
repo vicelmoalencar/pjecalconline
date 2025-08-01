@@ -12,10 +12,11 @@ RUN sed -i 's/port="8080"/port="9257"/g' /usr/local/tomcat/conf/server.xml && \
 # Criar diretório para aplicação
 RUN mkdir -p /usr/local/tomcat/webapps/pjecalc
 
-# Copiar arquivos da aplicação
+# Copiar arquivos da aplicação (apenas os diretórios que existem)
 COPY ./transfer/tomcat/webapps/pjecalc /usr/local/tomcat/webapps/pjecalc/
-COPY ./transfer/tomcat/conf/ /usr/local/tomcat/conf/
-COPY ./transfer/tomcat/lib/ /usr/local/tomcat/lib/
+
+# Verificar se o diretório conf existe antes de copiar
+RUN mkdir -p /usr/local/tomcat/conf
 
 # Ajustar permissões
 RUN chmod -R 755 /usr/local/tomcat/webapps/pjecalc
