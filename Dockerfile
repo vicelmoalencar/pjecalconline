@@ -1,38 +1,51 @@
-FROM tomcat:7-jre8
+FROM tomcat:7.0.94-jre8
 
-# Configuração de variáveis de ambiente
-ENV JAVA_OPTS="-Duser.timezone=America/Sao_Paulo -Dfile.encoding=UTF-8 -Xms512m -Xmx1024m"
-ENV CATALINA_OPTS="-Dorg.apache.catalina.connector.RECYCLE_FACADES=false"
+# Configurar fuso horário
+ENV TZ=America/Sao_Paulo
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Configurar portas do Tomcat
-RUN sed -i 's/port="8080"/port="9257"/g' /usr/local/tomcat/conf/server.xml && \
-    sed -i 's/port="8005"/port="9256"/g' /usr/local/tomcat/conf/server.xml && \
-    sed -i 's/port="8009"/port="9258"/g' /usr/local/tomcat/conf/server.xml
+# Configurar Tomcat
+COPY tomcat/conf/server.xml /usr/local/tomcat/conf/
+COPY tomcat/conf/context.xml /usr/local/tomcat/conf/
+COPY tomcat/conf/logging.properties /usr/local/tomcat/conf/
 
-# Criar diretório para aplicação e banco de dados
-RUN mkdir -p /usr/local/tomcat/webapps/pjecalc && \
-    mkdir -p /usr/local/tomcat/.dados && \
-    chmod -R 777 /usr/local/tomcat/.dados
+# Copiar aplicação
+COPY tomcat/webapps/pjecalc /usr/local/tomcat/webapps/pjecalc/
 
-# Copiar arquivos da aplicação
-COPY ./transfer/tomcat/webapps/pjecalc /usr/local/tomcat/webapps/pjecalc/
+# Criar diretório para dados do H2
+RUN mkdir -p /usr/local/tomcat/webapps/pjecalc/.dados
 
-# Corrigir configurações de datasource no context.xml e outros arquivos XML
-RUN find /usr/local/tomcat -name "*.xml" -type f -exec sed -i 's/maxActive=/maxTotal=/g' {} \; && \
-    find /usr/local/tomcat -name "*.xml" -type f -exec sed -i 's/maxWait=/maxWaitMillis=/g' {} \; && \
-    find /usr/local/tomcat -name "*.xml" -type f -exec sed -i 's/removeAbandoned=/removeAbandonedOnBorrow=/g' {} \; && \
-    find /usr/local/tomcat -name "*.xml" -type f -exec sed -i 's/removeAbandonedTimeout=/removeAbandonedTimeout=/g' {} \;
+# Criar script de diagnóstico
+RUN echo '#!/bin/bash\n\
+echo "=== DIAGNÓSTICO DE ERRO 404 ==="\n\
+echo ""\n\
+echo "=== Listando arquivos em /usr/local/tomcat/webapps/pjecalc/ ==="\n\
+find /usr/local/tomcat/webapps/pjecalc -type f -name "*.jsf" -o -name "*.xhtml" | sort\n\
+echo ""\n\
+echo "=== Verificando web.xml ==="\n\
+cat /usr/local/tomcat/webapps/pjecalc/WEB-INF/web.xml | grep -A 10 "faces-servlet"\n\
+echo ""\n\
+echo "=== Verificando logs de acesso ==="\n\
+touch /usr/local/tomcat/logs/localhost_access_log.txt\n\
+tail -100 /usr/local/tomcat/logs/localhost_access_log.txt\n\
+echo ""\n\
+echo "=== Verificando permissões de arquivos ==="\n\
+ls -la /usr/local/tomcat/webapps/pjecalc/\n\
+echo ""\n\
+echo "=== Verificando estrutura de diretórios ==="\n\
+find /usr/local/tomcat/webapps/pjecalc -type d | sort\n\
+echo ""\n\
+echo "=== Iniciando Tomcat ==="\n\
+catalina.sh run\n\
+' > /usr/local/tomcat/bin/diagnostic.sh
 
-# Verificar arquivos específicos de configuração do datasource
-RUN if [ -f /usr/local/tomcat/webapps/pjecalc/META-INF/context.xml ]; then \
-        sed -i 's|jdbc:h2:.dados/pjecalc|jdbc:h2:/usr/local/tomcat/.dados/pjecalc|g' /usr/local/tomcat/webapps/pjecalc/META-INF/context.xml; \
-    fi
+RUN chmod +x /usr/local/tomcat/bin/diagnostic.sh
 
-# Ajustar permissões
-RUN chmod -R 755 /usr/local/tomcat/webapps/pjecalc
+# Configurar variáveis de ambiente do Tomcat
+ENV CATALINA_OPTS="-Duser.timezone=America/Sao_Paulo -Dfile.encoding=UTF-8 -Xms512m -Xmx1024m"
 
 # Expor portas
-EXPOSE 9256 9257 9258
+EXPOSE 9257 9258
 
-# Comando para iniciar o Tomcat
-CMD ["catalina.sh", "run"]
+# Iniciar com script de diagnóstico
+CMD ["/usr/local/tomcat/bin/diagnostic.sh"]
