@@ -1,0 +1,10 @@
+# Instruções para migração do PJE-Calc para VPS com EasyPanel 
+ 
+1. Transfira todos os arquivos desta pasta para a VPS 
+2. Na VPS, execute os seguintes comandos: 
+   chmod +x migrate-pjecalc.sh 
+   sudo ./migrate-pjecalc.sh 
+ 
+3. Após a instalação, acesse o PJE-Calc em: http://seu-servidor:9257/pjecalc 
+ 
+Para mais informações, consulte o arquivo README.md 
