@@ -2,7 +2,6 @@ FROM tomcat:7.0.94-jre8
 
 # Configurar fuso horário
 ENV TZ=America/Sao_Paulo
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Configurar portas do Tomcat
 RUN sed -i 's/port="8080"/port="9257"/g' /usr/local/tomcat/conf/server.xml && \
@@ -24,7 +23,6 @@ RUN echo '<!DOCTYPE html>\
 <body>\
     <h1>PJE-Calc Test Page</h1>\
     <p>Esta é uma página de teste para verificar se o contexto /pjecalc está funcionando.</p>\
-    <p>Timestamp: '$(date)'</p>\
 </body>\
 </html>' > /usr/local/tomcat/webapps/pjecalc/index.html
 
@@ -51,30 +49,11 @@ RUN echo '<?xml version="1.0" encoding="UTF-8"?>\
     </welcome-file-list>\
 </web-app>' > /usr/local/tomcat/webapps/pjecalc/WEB-INF/web.xml
 
-# Criar um script de diagnóstico simples
-RUN echo '#!/bin/sh\n\
-echo "=== DIAGNÓSTICO BÁSICO ==="\n\
-echo ""\n\
-echo "=== Estrutura de diretórios ==="\n\
-find /usr/local/tomcat/webapps -type d\n\
-echo ""\n\
-echo "=== Arquivos em /pjecalc ==="\n\
-find /usr/local/tomcat/webapps/pjecalc -type f\n\
-echo ""\n\
-echo "=== Conteúdo do web.xml ==="\n\
-cat /usr/local/tomcat/webapps/pjecalc/WEB-INF/web.xml\n\
-echo ""\n\
-echo "=== Iniciando Tomcat ==="\n\
-catalina.sh run\n\
-' > /usr/local/tomcat/bin/diagnostic.sh
-
-RUN chmod +x /usr/local/tomcat/bin/diagnostic.sh
-
 # Configurar variáveis de ambiente do Tomcat
 ENV CATALINA_OPTS="-Duser.timezone=America/Sao_Paulo -Dfile.encoding=UTF-8 -Xms512m -Xmx1024m"
 
 # Expor portas
 EXPOSE 9257 9258
 
-# Iniciar com script de diagnóstico
-CMD ["/usr/local/tomcat/bin/diagnostic.sh"]
+# Iniciar Tomcat
+CMD ["catalina.sh", "run"]
