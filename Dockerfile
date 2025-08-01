@@ -4,16 +4,6 @@ FROM tomcat:7.0.94-jre8
 ENV TZ=America/Sao_Paulo
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Instalar ferramentas de diagnóstico
-RUN apt-get update && apt-get install -y \
-    procps \
-    net-tools \
-    curl \
-    vim \
-    tree \
-    unzip \
-    && rm -rf /var/lib/apt/lists/*
-
 # Configurar portas do Tomcat
 RUN sed -i 's/port="8080"/port="9257"/g' /usr/local/tomcat/conf/server.xml && \
     sed -i 's/port="8009"/port="9258"/g' /usr/local/tomcat/conf/server.xml
@@ -61,18 +51,15 @@ RUN echo '<?xml version="1.0" encoding="UTF-8"?>\
     </welcome-file-list>\
 </web-app>' > /usr/local/tomcat/webapps/pjecalc/WEB-INF/web.xml
 
-# Criar um arquivo de diagnóstico para verificar a estrutura
-RUN echo '#!/bin/bash\n\
-echo "=== DIAGNÓSTICO DE ESTRUTURA E ACESSO ==="\n\
+# Criar um script de diagnóstico simples
+RUN echo '#!/bin/sh\n\
+echo "=== DIAGNÓSTICO BÁSICO ==="\n\
 echo ""\n\
 echo "=== Estrutura de diretórios ==="\n\
-find /usr/local/tomcat/webapps -type d | sort\n\
+find /usr/local/tomcat/webapps -type d\n\
 echo ""\n\
 echo "=== Arquivos em /pjecalc ==="\n\
-find /usr/local/tomcat/webapps/pjecalc -type f | sort\n\
-echo ""\n\
-echo "=== Permissões ==="\n\
-ls -la /usr/local/tomcat/webapps/pjecalc\n\
+find /usr/local/tomcat/webapps/pjecalc -type f\n\
 echo ""\n\
 echo "=== Conteúdo do web.xml ==="\n\
 cat /usr/local/tomcat/webapps/pjecalc/WEB-INF/web.xml\n\
